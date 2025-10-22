@@ -1,3 +1,5 @@
+class InvalidTaxRateError extends Error {}
+
 class Employee {
     static count = 0;
     static hoursPerWeek = 35;
@@ -8,8 +10,7 @@ class Employee {
 
     constructor(name: string, taxRate: number) {
         this.name = name;
-
-        if (!Employee.isTaxRateValid(taxRate)) this.#taxRate = 0;
+        Employee.validateTaxRate(taxRate);
         this.#taxRate = taxRate;
 
         this.id = ++Employee.count;
@@ -20,12 +21,20 @@ class Employee {
     }
 
     set taxRate(value: number) {
-        if (!Employee.isTaxRateValid(value)) this.#taxRate = 0;
+        Employee.validateTaxRate(value);
         this.#taxRate = value;
     }
 
     static isTaxRateValid(rate: number): boolean {
         return rate >= 0.1 && rate <= 0.4;
+    }
+
+    static validateTaxRate(rate: number): void {
+        if (!Employee.isTaxRateValid(rate)) {
+            throw new InvalidTaxRateError(
+                `tax rate ${rate} must be between 0.1 and 0.4 (inclusive)`,
+            );
+        }
     }
 
     deductTaxes(salary: number): number {
@@ -60,3 +69,19 @@ class SalariedEmployee extends Employee {
         return this.deductTaxes(pay);
     }
 }
+
+function main(): void {
+    const name = prompt("Name:") || "";
+    const rate = Number(prompt("Tax rate:"));
+
+    try {
+        const employee = new Employee(name, rate);
+        console.log(employee);
+    } catch (error) {
+        if (error instanceof InvalidTaxRateError) {
+            console.log("Error while creating employee.");
+        }
+    }
+}
+
+main();
